@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ashline Rentals - Self-Drive & Luxury Car Rentals</title>
+
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Tailwind CSS v4 Browser Build CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+</head>
+
+<body
+    class="bg-[#130a13] text-gray-100 min-h-full flex flex-col antialiased selection:bg-rose-500 selection:text-white">
+
+    <div id="app" class="flex flex-col min-h-screen relative overflow-x-hidden">
+
+        <!-- Toast Notification Box -->
+        <transition name="toast" enter-active-class="transform transition duration-300 ease-out"
+            enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+            enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+            leave-active-class="transition duration-100 ease-in" leave-from-class="opacity-100"
+            leave-to-class="opacity-0">
+            <div v-if="toast.show"
+                class="fixed bottom-5 right-5 z-50 flex items-center gap-3 bg-[#2a1728] text-white px-5 py-4 rounded-xl shadow-2xl border border-amber-500/30 max-w-sm">
+                <i :class="toast.icon" class="text-xl text-amber-400"></i>
+                <div class="flex-1 text-sm font-medium">{{ toast.message }}</div>
+                <button @click="toast.show = false" class="text-gray-400 hover:text-white"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+        </transition>
+
+        <!-- HEADER & NAVIGATION -->
+        <header
+            class="sticky top-0 z-40 w-full backdrop-blur-md bg-[#241923]/90 border-b border-rose-950/40 transition-all duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20">
+
+                    <!-- Logo / Brand -->
+                    <div class="flex items-center gap-3 cursor-pointer group" @click="navigate('home')">
+                        <div
+                            class="relative overflow-hidden rounded-full p-0.5 bg-gradient-to-tr from-amber-500 to-rose-600">
+                            <img class="h-11 w-11 sm:h-12 sm:w-12 rounded-full object-cover group-hover:scale-105 transition duration-300"
+                                src="https://i.pinimg.com/736x/be/1c/1e/be1c1e22f444da47c314c170b4a7a3f0.jpg"
+                                alt="Ashline Rentals Logo"
+                                onerror="this.src='https://placehold.co/100x100/3b2238/ffffff?text=AR'">
+                        </div>
+                        <div class="flex flex-col">
+                            <span
+                                class="text-xl sm:text-2xl font-extrabold tracking-wider bg-gradient-to-r from-white via-rose-100 to-amber-200 bg-clip-text text-transparent italic">
+                                ASHLINE
+                            </span>
+                            <span class="text-[10px] tracking-widest text-amber-400/90 font-semibold uppercase -mt-1">
+                                RENTALS PH
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Nav Menu -->
+                    <nav class="hidden md:flex items-center gap-1 lg:gap-2">
+                        <button @click="navigate('home')"
+                            :class="activeTab === 'home' ? 'text-amber-400 bg-white/10 font-bold' : 'text-gray-300 hover:text-white hover:bg-white/5'"
+                            class="px-4 py-2 rounded-xl text-sm transition-all duration-200">
+                            HOME
+                        </button>
+                        <button @click="navigate('vehicles')"
+                            :class="activeTab === 'vehicles' ? 'text-amber-400 bg-white/10 font-bold' : 'text-gray-300 hover:text-white hover:bg-white/5'"
+                            class="px-4 py-2 rounded-xl text-sm transition-all duration-200">
+                            BOOK NOW
+                        </button>
+                        <button @click="navigate('about')"
+                            :class="activeTab === 'about' ? 'text-amber-400 bg-white/10 font-bold' : 'text-gray-300 hover:text-white hover:bg-white/5'"
+                            class="px-4 py-2 rounded-xl text-sm transition-all duration-200">
+                            ABOUT US
+                        </button>
+                        <button @click="navigate('contact')"
+                            :class="activeTab === 'contact' ? 'text-amber-400 bg-white/10 font-bold' : 'text-gray-300 hover:text-white hover:bg-white/5'"
+                            class="px-4 py-2 rounded-xl text-sm transition-all duration-200">
+                            CONTACT
+                        </button>
+                    </nav>
+
+                    <!-- Right Action Buttons -->
+                    <div class="flex items-center gap-3">
+                        <!-- Cart Icon Badge Button -->
+                        <button @click="toggleCartDrawer"
+                            class="relative p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 hover:text-white transition">
+                            <i class="fa-solid fa-car-side text-lg"></i>
+                            <span v-if="cart.length > 0"
+                                class="absolute -top-1 -right-1 bg-gradient-to-r from-amber-500 to-rose-500 text-black text-xs font-black h-5 w-5 rounded-full flex items-center justify-center shadow-lg">
+                                {{ cart.length }}
+                            </span>
+                        </button>
+
+                        <!-- Register / Auth Button -->
+                        <button @click="openAuthModal"
+                            class="hidden sm:inline-flex items-center gap-2 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-lg transition duration-200 transform hover:-translate-y-0.5">
+                            <i class="fa-solid fa-user-plus text-xs"></i>
+                            <span>REGISTER</span>
+                        </button>
+
+                        <!-- Mobile Menu Hamburger Button -->
+                        <button @click="mobileMenuOpen = !mobileMenuOpen"
+                            class="md:hidden p-2 rounded-xl bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 focus:outline-none">
+                            <i :class="mobileMenuOpen ? 'fa-solid fa-xmark text-xl' : 'fa-solid fa-bars text-xl'"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Nav Dropdown Drawer -->
+            <transition enter-active-class="transition duration-200 ease-out"
+                enter-from-class="opacity-0 -translate-y-4" enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 -translate-y-4">
+                <div v-if="mobileMenuOpen"
+                    class="md:hidden bg-[#1f131e] border-b border-rose-950/60 px-4 pt-3 pb-6 space-y-2 shadow-2xl">
+                    <button @click="navigate('home')"
+                        :class="activeTab === 'home' ? 'bg-amber-500/20 text-amber-400 font-bold' : 'text-gray-300'"
+                        class="w-full text-left px-4 py-3 rounded-xl text-base flex items-center gap-3">
+                        <i class="fa-solid fa-house w-5"></i> HOME
+                    </button>
+                    <button @click="navigate('vehicles')"
+                        :class="activeTab === 'vehicles' ? 'bg-amber-500/20 text-amber-400 font-bold' : 'text-gray-300'"
+                        class="w-full text-left px-4 py-3 rounded-xl text-base flex items-center gap-3">
+                        <i class="fa-solid fa-car w-5"></i> BOOK NOW
+                    </button>
+                    <button @click="navigate('about')"
+                        :class="activeTab === 'about' ? 'bg-amber-500/20 text-amber-400 font-bold' : 'text-gray-300'"
+                        class="w-full text-left px-4 py-3 rounded-xl text-base flex items-center gap-3">
+                        <i class="fa-solid fa-circle-info w-5"></i> ABOUT US
+                    </button>
+                    <button @click="navigate('contact')"
+                        :class="activeTab === 'contact' ? 'bg-amber-500/20 text-amber-400 font-bold' : 'text-gray-300'"
+                        class="w-full text-left px-4 py-3 rounded-xl text-base flex items-center gap-3">
+                        <i class="fa-solid fa-envelope w-5"></i> CONTACT US
+                    </button>
+
+                    <div class="pt-3 border-t border-white/10 flex flex-col gap-2">
+                        <button @click="openAuthModal"
+                            class="w-full bg-gradient-to-r from-rose-600 to-amber-600 text-white font-bold py-3 rounded-xl text-center shadow-lg">
+                            REGISTER / SIGN IN
+                        </button>
+                    </div>
+                </div>
+            </transition>
+        </header>
+
+        <main class="flex-grow">
+
+            <!-- SECTION 1: HOME SECTION -->
+            <div v-if="activeTab === 'home'" class="space-y-12 pb-16">
+
+                <!-- Flash Promo Banner -->
+                <div
+                    class="bg-gradient-to-r from-amber-600/30 via-rose-600/30 to-purple-800/30 border-b border-amber-500/20 py-3 px-4 text-center">
+                    <p
+                        class="text-xs sm:text-sm font-semibold tracking-wide text-amber-300 flex items-center justify-center gap-2">
+                        <span
+                            class="bg-amber-500 text-black text-[10px] font-black px-2 py-0.5 rounded-full uppercase animate-pulse">Flash
+                            Sale</span>
+                        September Special: Save 10% on early online bookings!
+                    </p>
+                </div>
+
+                <!-- Hero Section -->
+                <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+
+                        <!-- Hero Left Text Content -->
+                        <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                            <div
+                                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold">
+                                <i class="fa-solid fa-shield-halved"></i> #1 Peer-to-Peer Car Rental Platform
+                            </div>
+
+                            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
+                                Travel Easier With <br class="hidden sm:inline">
+                                <span
+                                    class="bg-gradient-to-r from-amber-400 via-rose-400 to-amber-200 bg-clip-text text-transparent">
+                                    ASHLINE RENTALS
+                                </span>
+                            </h1>
+
+                            <p
+                                class="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+                                Experience hassle-free self-drive vehicle rentals across Manila, Cebu, Iloilo, and
+                                Davao. Premium SUV, Van, Sedan & MPV options at transparent daily rates.
+                            </p>
+
+                            <div
+                                class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                                <button @click="navigate('vehicles')"
+                                    class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-black font-extrabold text-base rounded-2xl shadow-xl hover:shadow-amber-500/20 transition transform hover:-translate-y-1 flex items-center justify-center gap-3">
+                                    <span>EXPLORE FLEET</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                                <button @click="navigate('about')"
+                                    class="w-full sm:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/15 text-white font-bold text-base rounded-2xl transition flex items-center justify-center gap-2">
+                                    <i class="fa-circle-play text-amber-400"></i>
+                                    <span>HOW IT WORKS</span>
+                                </button>
+                            </div>
+
+                            <!-- Highlights/Trust Stats -->
+                            <div
+                                class="pt-6 grid grid-cols-3 gap-4 border-t border-white/10 max-w-lg mx-auto lg:mx-0 text-center lg:text-left">
+                                <div>
+                                    <p class="text-xl sm:text-2xl font-black text-amber-400">2,000+</p>
+                                    <p class="text-xs text-gray-400">Active Vehicles</p>
+                                </div>
+                                <div>
+                                    <p class="text-xl sm:text-2xl font-black text-amber-400">5+</p>
+                                    <p class="text-xs text-gray-400">Strategic Hubs</p>
+                                </div>
+                                <div>
+                                    <p class="text-xl sm:text-2xl font-black text-amber-400">24/7</p>
+                                    <p class="text-xs text-gray-400">Roadside Support</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hero Right Graphic/Image -->
+                        <div class="lg:col-span-5 relative">
+                            <div class="relative mx-auto max-w-md lg:max-w-none">
+                                <div
+                                    class="absolute -inset-1 rounded-3xl bg-gradient-to-r from-amber-500/30 to-rose-600/30 blur-xl opacity-70">
+                                </div>
+                                <div
+                                    class="relative bg-[#231522] border border-white/10 rounded-3xl p-4 overflow-hidden shadow-2xl">
+                                    <img src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1000&q=80"
+                                        alt="Luxury Rental SUV"
+                                        class="w-full h-64 sm:h-80 object-cover rounded-2xl transform hover:scale-105 transition duration-500">
+
+                                    <div
+                                        class="absolute bottom-6 left-6 right-6 bg-[#180f18]/85 backdrop-blur-md p-4 rounded-xl border border-white/10 flex items-center justify-between">
+                                        <div>
+                                            <p class="text-xs font-semibold text-amber-400 uppercase tracking-wider">
+                                                Featured Vehicle</p>
+                                            <p class="text-sm font-bold text-white">Toyota Fortuner 2.8 LTD</p>
+                                        </div>
+                                        <span
+                                            class="text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full">
+                                            ₱3,500/day
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- Responsive Quick Search / Filter Widget -->
+                <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div
+                        class="bg-gradient-to-b from-[#2d1b2b] to-[#20121f] p-5 sm:p-8 rounded-3xl border border-rose-900/40 shadow-2xl">
+                        <h2 class="text-lg sm:text-xl font-bold text-white mb-6 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-amber-400"></i>
+                            Quick Vehicle Reservation
+                        </h2>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <!-- Seating Filter -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-semibold text-gray-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-users text-rose-400"></i> Capacity
+                                </label>
+                                <select v-model="searchFilter.capacity"
+                                    class="bg-[#170c17] text-white text-sm rounded-xl px-4 py-3 border border-white/10 focus:outline-none focus:border-amber-500">
+                                    <option value="ALL">Any Seating Capacity</option>
+                                    <option value="5">5 Seater (Sedan/SUV)</option>
+                                    <option value="7">7 Seater (MPV/SUV)</option>
+                                    <option value="12">10-14 Seater (Van)</option>
+                                </select>
+                            </div>
+
+                            <!-- Pickup Date -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-semibold text-gray-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-calendar-check text-rose-400"></i> Pickup Date
+                                </label>
+                                <input type="date" v-model="searchFilter.pickupDate"
+                                    class="bg-[#170c17] text-white text-sm rounded-xl px-4 py-3 border border-white/10 focus:outline-none focus:border-amber-500">
+                            </div>
+
+                            <!-- Return Date -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-semibold text-gray-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-calendar-xmark text-rose-400"></i> Return Date
+                                </label>
+                                <input type="date" v-model="searchFilter.returnDate"
+                                    class="bg-[#170c17] text-white text-sm rounded-xl px-4 py-3 border border-white/10 focus:outline-none focus:border-amber-500">
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="flex flex-col justify-end">
+                                <button @click="applyFilterSearch"
+                                    class="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm py-3 px-6 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <span>FIND VEHICLES</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Value Proposition Highlights -->
+                <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div
+                            class="p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-amber-500/40 transition">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-4">
+                                <i class="fa-solid fa-key"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-white mb-2">Self-Drive Freedom</h3>
+                            <p class="text-sm text-gray-400">Drive at your own pace with unlimited flexibility and
+                                simple documentation requirements.</p>
+                        </div>
+
+                        <div
+                            class="p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-amber-500/40 transition">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl mb-4">
+                                <i class="fa-solid fa-tag"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-white mb-2">Best Rate Guarantee</h3>
+                            <p class="text-sm text-gray-400">No hidden fees. Transparent daily rental charges starting
+                                from ₱1,800/day.</p>
+                        </div>
+
+                        <div
+                            class="p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-amber-500/40 transition">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-4">
+                                <i class="fa-solid fa-headset"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-white mb-2">24/7 Roadside Assistance</h3>
+                            <p class="text-sm text-gray-400">Comprehensive insurance coverage with round-the-clock
+                                emergency assistance nationwide.</p>
+                        </div>
+
+                        <div
+                            class="p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-amber-500/40 transition">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl mb-4">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-white mb-2">5+ Regional Hubs</h3>
+                            <p class="text-sm text-gray-400">Pickup and dropoff available across Quezon City, Cebu,
+                                Iloilo, Davao & airports.</p>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- SECTION 2: VEHICLES CATALOG / BOOK NOW -->
+            <div v-if="activeTab === 'vehicles'" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+
+                <!-- Section Header -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">
+                    <div>
+                        <span class="text-xs font-bold text-amber-400 tracking-widest uppercase">Fleet Collection</span>
+                        <h1 class="text-3xl sm:text-4xl font-extrabold text-white mt-1">Available Rental Vehicles</h1>
+                    </div>
+                    <p class="text-sm text-gray-400 max-w-md">Choose from our well-maintained fleet of self-drive SUVs,
+                        MPVs, Vans, and Sedans.</p>
+                </div>
+
+                <!-- Category Filter Buttons -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                    <button v-for="cat in categories" :key="cat" @click="selectedCategory = cat"
+                        :class="selectedCategory === cat ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white font-bold' : 'bg-white/5 text-gray-300 hover:bg-white/10'"
+                        class="px-5 py-2.5 rounded-xl text-xs sm:text-sm whitespace-nowrap transition-all duration-200">
+                        {{ cat }}
+                    </button>
+                </div>
+
+                <!-- Product Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div v-for="product in filteredProducts" :key="product.id"
+                        class="bg-[#241723] rounded-3xl border border-white/10 overflow-hidden hover:border-amber-500/50 transition-all duration-300 flex flex-col justify-between group shadow-xl">
+
+                        <div>
+                            <!-- Vehicle Image with Badge -->
+                            <div class="relative h-48 bg-[#180f18] overflow-hidden">
+                                <img :src="product.image" :alt="product.name"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                                    onerror="this.src='https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80'">
+
+                                <span
+                                    class="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-amber-300 text-xs font-bold px-3 py-1 rounded-full border border-white/10">
+                                    {{ product.category }}
+                                </span>
+
+                                <span
+                                    class="absolute top-3 right-3 bg-rose-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                                    {{ product.seats }} Seats
+                                </span>
+                            </div>
+
+                            <!-- Vehicle Details -->
+                            <div class="p-5 space-y-3">
+                                <div>
+                                    <p class="text-xs text-amber-400 font-semibold tracking-wider uppercase">{{
+                                        product.brand }}</p>
+                                    <h3 class="text-xl font-bold text-white leading-snug">{{ product.name }}</h3>
+                                </div>
+
+                                <!-- Key Specs Icons -->
+                                <div class="grid grid-cols-3 gap-2 py-2 border-y border-white/10 text-center">
+                                    <div class="text-xs text-gray-400">
+                                        <i class="fa-solid fa-gears text-amber-400 block mb-1"></i>
+                                        {{ product.transmission }}
+                                    </div>
+                                    <div class="text-xs text-gray-400">
+                                        <i class="fa-solid fa-gas-pump text-amber-400 block mb-1"></i>
+                                        {{ product.fuel }}
+                                    </div>
+                                    <div class="text-xs text-gray-400">
+                                        <i class="fa-solid fa-user-group text-amber-400 block mb-1"></i>
+                                        {{ product.seats }} Capacity
+                                    </div>
+                                </div>
+
+                                <p class="text-xs text-gray-300 line-clamp-2 leading-relaxed">
+                                    {{ product.description }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Footer Price & Action -->
+                        <div class="p-5 pt-0 space-y-3">
+                            <div class="flex items-baseline justify-between">
+                                <span class="text-xs text-gray-400">Daily Rate</span>
+                                <div>
+                                    <span class="text-2xl font-black text-amber-400">₱{{ product.price.toLocaleString()
+                                        }}</span>
+                                    <span class="text-xs text-gray-400"> /day</span>
+                                </div>
+                            </div>
+
+                            <button @click="openBookingModal(product)"
+                                class="w-full bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-black font-extrabold text-xs tracking-wider uppercase py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg">
+                                <i class="fa-solid fa-calendar-plus"></i>
+                                <span>Reserve Now</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Empty state if search returns nothing -->
+                <div v-if="filteredProducts.length === 0"
+                    class="text-center py-16 bg-white/5 rounded-3xl border border-white/10">
+                    <i class="fa-solid fa-car-tunnel text-4xl text-gray-500 mb-3"></i>
+                    <p class="text-lg font-bold text-gray-300">No vehicles match your criteria</p>
+                    <p class="text-sm text-gray-500 mt-1">Try changing your category filter or seating requirements.</p>
+                    <button @click="selectedCategory = 'All'; searchFilter.capacity = 'ALL'"
+                        class="mt-4 px-6 py-2 bg-amber-500 text-black font-bold text-xs rounded-xl">
+                        RESET FILTERS
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- SECTION 3: ABOUT US -->
+            <div v-if="activeTab === 'about'" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <!-- Text Content -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <span class="text-xs font-bold text-amber-400 tracking-widest uppercase">Company Profile</span>
+                        <h1 class="text-3xl sm:text-4xl font-extrabold text-white">About ASHLINE RENTALS</h1>
+
+                        <p class="text-base text-gray-300 leading-relaxed">
+                            CB Auto Solutions Corporation, operating as <strong class="text-amber-300">Ashline
+                                Rentals</strong>, is revolutionizing mobility across the Philippines. As a premier
+                            peer-to-peer and self-drive car rental platform, we seamlessly connect travelers to nearly
+                            2,000 vehicles across strategic regional hubs.
+                        </p>
+
+                        <p class="text-base text-gray-300 leading-relaxed">
+                            With a digital-first approach, we deliver a seamless, hassle-free rental experience, setting
+                            a new benchmark for convenience, affordability, and accessibility in transportation.
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                            <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                                <h4 class="font-bold text-amber-400 mb-1"><i class="fa-solid fa-check-circle mr-1"></i>
+                                    Verified Fleet</h4>
+                                <p class="text-xs text-gray-400">Regular maintenance checks for maximum safety and
+                                    comfort on long drives.</p>
+                            </div>
+                            <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                                <h4 class="font-bold text-amber-400 mb-1"><i class="fa-solid fa-check-circle mr-1"></i>
+                                    Partner Program</h4>
+                                <p class="text-xs text-gray-400">Earn residual income by listing your personal vehicle
+                                    on our platform.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Showcase -->
+                    <div class="lg:col-span-5 relative">
+                        <div class="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+                            <img src="https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=800&q=80"
+                                alt="Modern Car Fleet" class="w-full h-80 lg:h-96 object-cover">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-[#190D18] via-transparent to-transparent">
+                            </div>
+                            <div
+                                class="absolute bottom-6 left-6 right-6 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15">
+                                <p class="text-xs text-amber-300 font-bold uppercase">Ready to hit the road?</p>
+                                <p class="text-sm font-semibold text-white mt-1">Book a vehicle in minutes — or earn
+                                    with us as a fleet partner.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hub Locations Grid -->
+                <div class="bg-[#241723] p-6 sm:p-8 rounded-3xl border border-white/10 space-y-6">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-location-dot text-amber-400"></i> Our Regional Hub Locations
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-black/30 p-4 rounded-xl border border-white/5">
+                            <h4 class="text-amber-300 font-bold text-sm mb-1">Quezon City</h4>
+                            <p class="text-xs text-gray-400">16 Lukaria St., Katipunan, Quezon City, Metro Manila</p>
+                        </div>
+                        <div class="bg-black/30 p-4 rounded-xl border border-white/5">
+                            <h4 class="text-amber-300 font-bold text-sm mb-1">Cebu City</h4>
+                            <p class="text-xs text-gray-400">16F Skyrise 4B, Cebu IT Park, Cebu City</p>
+                        </div>
+                        <div class="bg-black/30 p-4 rounded-xl border border-white/5">
+                            <h4 class="text-amber-300 font-bold text-sm mb-1">Iloilo City</h4>
+                            <p class="text-xs text-gray-400">F. Gorriceta Avenue, Pandac, Pavia, Iloilo</p>
+                        </div>
+                        <div class="bg-black/30 p-4 rounded-xl border border-white/5">
+                            <h4 class="text-amber-300 font-bold text-sm mb-1">Davao City</h4>
+                            <p class="text-xs text-gray-400">4th Floor TOPAZ Tower, Lanang, Davao City</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SECTION 4: CONTACT US -->
+            <div v-if="activeTab === 'contact'" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+
+                <div class="text-center max-w-3xl mx-auto space-y-3">
+                    <span class="text-xs font-bold text-amber-400 tracking-widest uppercase">Get in Touch</span>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold text-white">We'd Love to Hear From You</h1>
+                    <p class="text-sm text-gray-300">Questions about a booking, vehicle requirements, or partnership
+                        opportunities? Drop us a message.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                    <!-- Contact Cards -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <div class="bg-[#241723] p-6 rounded-2xl border border-white/10 space-y-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-lg">
+                                <i class="fa-brands fa-facebook-messenger"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-white">Chat on Messenger</h3>
+                            <p class="text-xs text-gray-400">Fast replies from our customer service agents available
+                                daily 8AM - 10PM.</p>
+                            <a href="https://m.me" target="_blank"
+                                class="inline-flex items-center gap-2 text-xs font-bold text-blue-400 hover:text-blue-300">
+                                Open Messenger <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                        </div>
+
+                        <div class="bg-[#241723] p-6 rounded-2xl border border-white/10 space-y-4">
+                            <h3 class="text-lg font-bold text-white">Direct Contact</h3>
+
+                            <div class="space-y-3 text-xs">
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-phone text-amber-400 mt-1"></i>
+                                    <div>
+                                        <p class="font-bold text-white">Mobile Hotline</p>
+                                        <p class="text-gray-400">+63 945 963 9798</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-envelope text-amber-400 mt-1"></i>
+                                    <div>
+                                        <p class="font-bold text-white">Email Address</p>
+                                        <p class="text-gray-400">support@carbnbrentals.com</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-building text-amber-400 mt-1"></i>
+                                    <div>
+                                        <p class="font-bold text-white">Main Corporate Office</p>
+                                        <p class="text-gray-400">11F Insular Life Building, 6781 Ayala Avenue, Makati
+                                            City</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Form -->
+                    <div class="lg:col-span-7">
+                        <form @submit.prevent="submitContactForm"
+                            class="bg-[#241723] p-6 sm:p-8 rounded-2xl border border-white/10 space-y-4">
+                            <h3 class="text-xl font-bold text-white mb-2">Send an Inquiry</h3>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-300 mb-1">Your Name</label>
+                                    <input type="text" v-model="contactForm.name" required placeholder="Juan Dela Cruz"
+                                        class="w-full bg-[#180f18] text-white text-sm rounded-xl px-4 py-3 border border-white/10 focus:outline-none focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-300 mb-1">Email Address</label>
+                                    <input type="email" v-model="contactForm.email" required
+                                        placeholder="juan@example.com"
+                                        class="w-full bg-[#180f18] text-white text-sm rounded-xl px-4 py-3 border border-white/10 focus:outline-none focus:border-amber-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Subject</label>
+                                <input type="text" v-model="contactForm.subject" required
+                                    placeholder="Rental Inquiry / Long-term booking"
+                                    class="w-full bg-[#180f18] text-white text-sm rounded-xl px-4 py-3 border border-white/10 focus:outline-none focus:border-amber-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Message</label>
+                                <textarea rows="4" v-model="contactForm.message" required
+                                    placeholder="Type your message or special requirements here..."
+                                    class="w-full bg-[#180f18] text-white text-sm rounded-xl px-4 py-3 border border-white/10 focus:outline-none focus:border-amber-500"></textarea>
+                            </div>
+
+                            <button type="submit"
+                                class="w-full bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-black font-extrabold text-sm py-3.5 rounded-xl transition shadow-lg">
+                                SEND MESSAGE
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- CART / RESERVATION DRAWER SLIDE-OVER -->
+        <div v-if="cartDrawerOpen" class="fixed inset-0 z-50 overflow-hidden">
+            <div @click="cartDrawerOpen = false"
+                class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"></div>
+
+            <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+                <div
+                    class="w-screen max-w-md bg-[#221521] border-l border-white/10 text-white p-6 flex flex-col justify-between shadow-2xl relative">
+
+                    <div>
+                        <!-- Header -->
+                        <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                            <h2 class="text-xl font-bold flex items-center gap-2">
+                                <i class="fa-solid fa-car-side text-amber-400"></i> My Reservations
+                            </h2>
+                            <button @click="cartDrawerOpen = false" class="text-gray-400 hover:text-white p-2">
+                                <i class="fa-solid fa-xmark text-xl"></i>
+                            </button>
+                        </div>
+
+                        <!-- Cart Items List -->
+                        <div class="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+                            <div v-for="(item, index) in cart" :key="index"
+                                class="bg-[#180f18] p-4 rounded-2xl border border-white/10 flex items-center justify-between gap-3">
+                                <img :src="item.image" :alt="item.name"
+                                    class="w-16 h-12 object-cover rounded-lg bg-black">
+
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-bold text-sm text-white truncate">{{ item.name }}</h4>
+                                    <p class="text-xs text-amber-400 font-semibold">₱{{ item.price.toLocaleString() }} /
+                                        day</p>
+                                    <p class="text-[10px] text-gray-400">{{ item.days || 1 }} day(s) rental</p>
+                                </div>
+
+                                <button @click="removeFromCart(index)" class="text-rose-400 hover:text-rose-300 p-2">
+                                    <i class="fa-solid fa-trash-can text-sm"></i>
+                                </button>
+                            </div>
+
+                            <div v-if="cart.length === 0" class="text-center py-12 text-gray-400 space-y-2">
+                                <i class="fa-solid fa-cart-flatbed text-3xl text-gray-600"></i>
+                                <p class="text-sm">Your reservation list is empty.</p>
+                                <button @click="cartDrawerOpen = false; navigate('vehicles')"
+                                    class="text-xs font-bold text-amber-400 hover:underline">
+                                    Browse Vehicles
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Drawer Footer / Summary -->
+                    <div v-if="cart.length > 0" class="border-t border-white/10 pt-4 space-y-3">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-400">Total Estimated Rate:</span>
+                            <span class="text-2xl font-black text-amber-400">₱{{ totalCartPrice.toLocaleString()
+                                }}</span>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button @click="clearCart"
+                                class="w-1/3 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs py-3 rounded-xl border border-white/10">
+                                CLEAR
+                            </button>
+                            <button @click="checkoutAll"
+                                class="w-2/3 bg-gradient-to-r from-amber-500 to-rose-600 text-black font-extrabold text-xs py-3 rounded-xl shadow-lg">
+                                PROCEED TO CHECKOUT
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- BOOKING SPECIFIC VEHICLE MODAL -->
+        <div v-if="bookingModal.show" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div @click="bookingModal.show = false" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+
+            <div
+                class="relative bg-[#241723] border border-white/15 rounded-3xl max-w-lg w-full p-6 text-white space-y-4 shadow-2xl z-10">
+                <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                    <h3 class="text-lg font-bold text-amber-300">Reserve {{ bookingModal.item?.name }}</h3>
+                    <button @click="bookingModal.show = false" class="text-gray-400 hover:text-white"><i
+                            class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+
+                <div class="flex gap-4 items-center bg-[#180f18] p-3 rounded-xl">
+                    <img :src="bookingModal.item?.image" class="w-20 h-16 object-cover rounded-lg">
+                    <div>
+                        <p class="text-xs text-amber-400 font-bold uppercase">{{ bookingModal.item?.brand }}</p>
+                        <p class="font-bold text-sm">{{ bookingModal.item?.name }}</p>
+                        <p class="text-xs text-gray-300">₱{{ bookingModal.item?.price.toLocaleString() }} / day</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-300 mb-1">Pickup Date</label>
+                        <input type="date" v-model="bookingModal.pickupDate"
+                            class="w-full bg-[#180f18] text-white text-xs rounded-xl p-3 border border-white/10">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-300 mb-1">Rental Days</label>
+                        <input type="number" min="1" max="30" v-model="bookingModal.days"
+                            class="w-full bg-[#180f18] text-white text-xs rounded-xl p-3 border border-white/10">
+                    </div>
+                </div>
+
+                <div
+                    class="bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 text-xs text-amber-200 flex justify-between items-center">
+                    <span>Estimated Total ({{ bookingModal.days }} Day/s):</span>
+                    <span class="text-base font-black text-amber-400">
+                        ₱{{ ((bookingModal.item?.price || 0) * (bookingModal.days || 1)).toLocaleString() }}
+                    </span>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button @click="bookingModal.show = false"
+                        class="w-1/2 bg-white/10 text-white font-bold text-xs py-3 rounded-xl">CANCEL</button>
+                    <button @click="confirmBooking"
+                        class="w-1/2 bg-gradient-to-r from-amber-500 to-rose-600 text-black font-extrabold text-xs py-3 rounded-xl">ADD
+                        TO RESERVATIONS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AUTH/REGISTER MODAL -->
+        <div v-if="authModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div @click="authModalOpen = false" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+
+            <div
+                class="relative bg-[#241723] border border-white/15 rounded-3xl max-w-sm w-full p-6 text-white space-y-4 shadow-2xl z-10">
+                <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                    <h3 class="text-lg font-bold text-amber-300">Create Ashline Account</h3>
+                    <button @click="authModalOpen = false" class="text-gray-400 hover:text-white"><i
+                            class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+
+                <form @submit.prevent="handleRegister" class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-gray-300 mb-1">Full Name</label>
+                        <input type="text" required placeholder="Juan Dela Cruz"
+                            class="w-full bg-[#180f18] text-white text-xs rounded-xl p-3 border border-white/10">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-300 mb-1">Mobile Number</label>
+                        <input type="tel" required placeholder="+63 900 000 0000"
+                            class="w-full bg-[#180f18] text-white text-xs rounded-xl p-3 border border-white/10">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-300 mb-1">Email Address</label>
+                        <input type="email" required placeholder="juan@gmail.com"
+                            class="w-full bg-[#180f18] text-white text-xs rounded-xl p-3 border border-white/10">
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-gradient-to-r from-amber-500 to-rose-600 text-black font-extrabold text-xs py-3 rounded-xl shadow-lg mt-2">
+                        REGISTER ACCOUNT
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="bg-[#180e17] border-t border-rose-950/60 text-gray-300 mt-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+
+                    <!-- Col 1: Brand Info -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <img class="h-10 w-10 rounded-full"
+                                src="https://i.pinimg.com/736x/be/1c/1e/be1c1e22f444da47c314c170b4a7a3f0.jpg"
+                                alt="Logo">
+                            <span class="text-xl font-black text-white italic">ASHLINE RENTALS</span>
+                        </div>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            The Philippines' peer-to-peer car rental platform. Book quality self-drive vehicles at
+                            competitive rates — anytime, anywhere.
+                        </p>
+                        <div class="flex gap-4 text-lg text-amber-400 pt-2">
+                            <a href="#" class="hover:text-white transition"><i class="fa-brands fa-tiktok"></i></a>
+                            <a href="#" class="hover:text-white transition"><i class="fa-brands fa-instagram"></i></a>
+                            <a href="#" class="hover:text-white transition"><i class="fa-brands fa-facebook"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Col 2: Quick Links -->
+                    <div class="space-y-3">
+                        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Explore Pages</h4>
+                        <ul class="space-y-2 text-xs text-gray-400">
+                            <li><button @click="navigate('home')" class="hover:text-amber-400">Home Page</button></li>
+                            <li><button @click="navigate('vehicles')" class="hover:text-amber-400">Book Vehicle
+                                    Now</button></li>
+                            <li><button @click="navigate('about')" class="hover:text-amber-400">About Our
+                                    Company</button></li>
+                            <li><button @click="navigate('contact')" class="hover:text-amber-400">Contact
+                                    Support</button></li>
+                        </ul>
+                    </div>
+
+                    <!-- Col 3: Get In Touch -->
+                    <div class="space-y-3">
+                        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Get In Touch</h4>
+                        <ul class="space-y-2 text-xs text-gray-400">
+                            <li><i class="fa-solid fa-envelope text-amber-400 mr-2"></i> support@carbnbrentals.com</li>
+                            <li><i class="fa-solid fa-phone text-amber-400 mr-2"></i> +63 945 963 9798</li>
+                            <li><i class="fa-solid fa-location-dot text-amber-400 mr-2"></i> Main Office 11F Insular
+                                Life Bldg, Makati City</li>
+                        </ul>
+                    </div>
+
+                    <!-- Col 4: Top Hubs -->
+                    <div class="space-y-3">
+                        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Rental Hubs</h4>
+                        <ul class="space-y-1.5 text-xs text-gray-400">
+                            <li><strong class="text-gray-300">Quezon City:</strong> Katipunan Ave</li>
+                            <li><strong class="text-gray-300">Cebu City:</strong> Cebu IT Park</li>
+                            <li><strong class="text-gray-300">Iloilo City:</strong> Pavia Hub</li>
+                            <li><strong class="text-gray-300">Davao City:</strong> Lanang Hub</li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div
+                    class="border-t border-white/10 mt-10 pt-6 text-center text-xs text-gray-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+                    <p>© 2026 Ashline Rentals / CB Auto Solutions Corp. All rights reserved.</p>
+                    <div class="flex gap-4">
+                        <a href="#" class="hover:underline">Privacy Policy</a>
+                        <a href="#" class="hover:underline">Terms of Service</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    activeTab: 'home',
+                    mobileMenuOpen: false,
+                    cartDrawerOpen: false,
+                    authModalOpen: false,
+
+                    // Categories Filter
+                    categories: ['All', 'SUV', 'MPV', 'Pickup', 'Van', 'Sedan'],
+                    selectedCategory: 'All',
+
+                    // Toast Notification
+                    toast: {
+                        show: false,
+                        message: '',
+                        icon: 'fa-solid fa-circle-check'
+                    },
+
+                    // Quick Search Filter Widget State
+                    searchFilter: {
+                        capacity: 'ALL',
+                        pickupDate: '',
+                        returnDate: ''
+                    },
+
+                    // Booking Specific Item Modal
+                    bookingModal: {
+                        show: false,
+                        item: null,
+                        pickupDate: '',
+                        days: 1
+                    },
+
+                    // Contact Form State
+                    contactForm: {
+                        name: '',
+                        email: '',
+                        subject: '',
+                        message: ''
+                    },
+
+                    // Vehicles Fleet Dataset
+                    products: [
+                        {
+                            id: 1,
+                            brand: 'TOYOTA',
+                            name: 'Fortuner LTD 2.8 Diesel',
+                            category: 'SUV',
+                            seats: 7,
+                            price: 3500,
+                            transmission: 'Automatic',
+                            fuel: 'Diesel',
+                            image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80',
+                            description: 'Ideal for long road trips requiring power and spacious 7-seater cargo room.'
+                        },
+                        {
+                            id: 2,
+                            brand: 'MITSUBISHI',
+                            name: 'Xpander Cross MPV',
+                            category: 'MPV',
+                            seats: 7,
+                            price: 2500,
+                            transmission: 'Automatic',
+                            fuel: 'Gasoline',
+                            image: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80',
+                            description: 'Multiple seating configurations perfect for group travel and fuel efficiency.'
+                        },
+                        {
+                            id: 3,
+                            brand: 'NISSAN',
+                            name: 'Navara PRO-4X 4x4',
+                            category: 'Pickup',
+                            seats: 5,
+                            price: 3200,
+                            transmission: 'Automatic',
+                            fuel: 'Diesel',
+                            image: 'https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=600&q=80',
+                            description: 'Durable and rugged pickup truck suitable for work and outdoor mountain adventures.'
+                        },
+                        {
+                            id: 4,
+                            brand: 'TOYOTA',
+                            name: 'HiAce Commuter Deluxe',
+                            category: 'Van',
+                            seats: 12,
+                            price: 4000,
+                            transmission: 'Manual',
+                            fuel: 'Diesel',
+                            image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80',
+                            description: 'High passenger capacity van for group tours, airport transfers, and heavy luggage.'
+                        },
+                        {
+                            id: 5,
+                            brand: 'HONDA',
+                            name: 'Civic RS Turbo',
+                            category: 'Sedan',
+                            seats: 5,
+                            price: 2200,
+                            transmission: 'CVT',
+                            fuel: 'Gasoline',
+                            image: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=600&q=80',
+                            description: 'Sleek executive sedan with premium sound system and city cruise comfort.'
+                        },
+                        {
+                            id: 6,
+                            brand: 'FORD',
+                            name: 'Everest Titanium+ 4x4',
+                            category: 'SUV',
+                            seats: 7,
+                            price: 4200,
+                            transmission: 'Automatic',
+                            fuel: 'Diesel',
+                            image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
+                            description: 'Luxury panoramic sunroof SUV equipped with modern driver assistance tech.'
+                        }
+                    ],
+
+                    // Cart Items Storage
+                    cart: []
+                };
+            },
+
+            computed: {
+                filteredProducts() {
+                    return this.products.filter(product => {
+                        const matchCat = this.selectedCategory === 'All' || product.category === this.selectedCategory;
+                        const matchSeats = this.searchFilter.capacity === 'ALL' || product.seats >= parseInt(this.searchFilter.capacity);
+                        return matchCat && matchSeats;
+                    });
+                },
+
+                totalCartPrice() {
+                    return this.cart.reduce((sum, item) => sum + (item.price * (item.days || 1)), 0);
+                }
+            },
+
+            methods: {
+                navigate(tab) {
+                    this.activeTab = tab;
+                    this.mobileMenuOpen = false;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                showNotification(msg, icon = 'fa-solid fa-circle-check') {
+                    this.toast.message = msg;
+                    this.toast.icon = icon;
+                    this.toast.show = true;
+                    setTimeout(() => {
+                        this.toast.show = false;
+                    }, 3500);
+                },
+
+                applyFilterSearch() {
+                    this.navigate('vehicles');
+                    this.showNotification('Filtered fleet according to your selected dates & capacity!');
+                },
+
+                openBookingModal(product) {
+                    this.bookingModal.item = product;
+                    this.bookingModal.days = 1;
+                    this.bookingModal.pickupDate = new Date().toISOString().split('T')[0];
+                    this.bookingModal.show = true;
+                },
+
+                confirmBooking() {
+                    if (!this.bookingModal.item) return;
+
+                    const reservation = {
+                        ...this.bookingModal.item,
+                        days: parseInt(this.bookingModal.days) || 1,
+                        pickupDate: this.bookingModal.pickupDate
+                    };
+
+                    this.cart.push(reservation);
+                    this.bookingModal.show = false;
+                    this.showNotification(`${reservation.name} added to your reservations list!`);
+                },
+
+                toggleCartDrawer() {
+                    this.cartDrawerOpen = !this.cartDrawerOpen;
+                },
+
+                removeFromCart(index) {
+                    const name = this.cart[index].name;
+                    this.cart.splice(index, 1);
+                    this.showNotification(`Removed ${name} from reservations.`, 'fa-solid fa-trash-can');
+                },
+
+                clearCart() {
+                    this.cart = [];
+                    this.showNotification('Cleared all pending reservations.');
+                },
+
+                checkoutAll() {
+                    this.cart = [];
+                    this.cartDrawerOpen = false;
+                    this.showNotification('Reservation request submitted successfully! Agent will contact you.', 'fa-solid fa-circle-check');
+                },
+
+                openAuthModal() {
+                    this.authModalOpen = true;
+                },
+
+                handleRegister() {
+                    this.authModalOpen = false;
+                    this.showNotification('Account registered successfully! You are now logged in.');
+                },
+
+                submitContactForm() {
+                    this.showNotification('Thank you for contacting us! Message sent successfully.');
+                    this.contactForm = { name: '', email: '', subject: '', message: '' };
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
